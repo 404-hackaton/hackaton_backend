@@ -1,7 +1,7 @@
 from django.http import JsonResponse
-from .models import Users
+from .models import User
 
 
 def home(request):
-    print(Users.objects)
+    print(User.objects)
     return JsonResponse({'user': 'admin'})
