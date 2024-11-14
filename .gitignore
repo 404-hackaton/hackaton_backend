@@ -1,1 +1,8 @@
-./env
+env/
+env/*
+.DS_Store
+base/__pycache__/
+base/__pycache__/*.pyc
+webserver/__pycache__/
+webserver/__pycache__/*.pyc
+base/migrations/__pycache__/
