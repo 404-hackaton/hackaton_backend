@@ -26,14 +26,25 @@ class User(models.Model):
     first_name = models.CharField(max_length=20)
     last_name = models.CharField(max_length=20)
     surname = models.CharField(max_length=30, blank=True)
-
-    # student captain professor
-    role = models.TextChoices("Role", "student captain professor")
-
+    role = models.CharField(max_length=15, choices={
+        "STUDENT": "student",
+        "CAPTAIN": "captain",
+        "PROFESSOR": "professor",
+        "ADMINISTRATOR": "administrator",
+    }, blank=True)
     status = models.BooleanField(default=True)
 
+    # get all members of the groups this user belongs to.
+    def get_all_group_members(self):
+        return User.objects.filter(
+            group_memberships__group_id__in=self.group_memberships.values('group_id')
+        ).distinct()
+    
+    def get_group_id(self):
+        return self.group_memberships.values('group_id')
+
     def __str__(self):
-        return self.email
+        return self.email + " | " + str(self.id)
 
 
 class Group(models.Model):
@@ -46,7 +57,7 @@ class Group(models.Model):
 
 class GroupMember(models.Model):
     group_id = models.ForeignKey(Group, on_delete=models.DO_NOTHING)
-    student_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    student_id = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="group_memberships")
 
 
 class Course(models.Model):
@@ -66,6 +77,9 @@ class Enrollment(models.Model):
     student_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     course_id = models.ForeignKey(Course, on_delete=models.DO_NOTHING)
 
+    class Meta:
+        unique_together = ["student_id", "course_id"]
+
 
 class Schedule(models.Model):
     course_id = models.ForeignKey(Course, on_delete=models.DO_NOTHING)
@@ -76,15 +90,18 @@ class Schedule(models.Model):
     audience = models.CharField(max_length=10)
     group_id = models.ForeignKey(Group, on_delete=models.DO_NOTHING, blank=True)
 
+    class Meta:
+        unique_together = ["date", "time", "audience", "location"]
+
 
 class Grade(models.Model):
     student_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     course_id = models.ForeignKey(Course, on_delete=models.DO_NOTHING)
     grade = models.IntegerField()
-    grade_type = models.CharField(max_length=10, choices={
-        "ATDNC": 'attendence',
-        "ACTVT": "activities",
-        "ACHVMNT": "achievments",
+    grade_type = models.CharField(max_length=15, choices={
+        "ATTENDENCE": 'attendence',
+        "ACTIVITIES": "activities",
+        "ACHIEVMENTS": "achievments",
         "TEST": "test",
     }, blank=True)
     source = models.ForeignKey(Schedule, on_delete=models.DO_NOTHING)
