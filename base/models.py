@@ -20,9 +20,8 @@ LOCATIONS = {
 # models (pk is setting by default)
 class User(models.Model):
     # users shoudnt be deleted, instead set different status
-    user_id = models.IntegerField(unique = True) #Борь, ты зачем ID убрал, я к мылу что ли токены привязывать буду?
     email = models.CharField(max_length=100, unique=True)
-    password = models.CharField(max_length=128) #Я бы сделал пароли уникальными, но как скажешь
+    password = models.CharField(max_length=128)
     first_name = models.CharField(max_length=20)
     last_name = models.CharField(max_length=20)
     surname = models.CharField(max_length=30, blank=True)
@@ -106,11 +105,10 @@ class Grade(models.Model):
     }, blank=True)
     source = models.ForeignKey(Schedule, on_delete=models.DO_NOTHING)
 
-class Tokens(models.Model):
+class Token(models.Model):
     user_token = models.CharField(max_lenght = 10, unique = True)
     user_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    token_birth = models.DateField()
+    token_created = models.DateTimeField()
 
 
 # TODO: clean this shit out of trash (blank)
-# TODO: Борь, если не западло будет проверь класс токенов, я в слиянии django и SQLite пока плаваю
