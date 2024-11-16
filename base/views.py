@@ -10,15 +10,18 @@ def mktk(): #MaKe ToKen
     return Token
 
 def home(request):
-    print(User.objects)
-    return JsonResponse({'user': 'admin'})
+    users = User.objects.all()
+    users_dict = {}
+    for user in users:
+        users_dict[user.email] = user.password
+    return JsonResponse(users_dict)
 
 def proc(request):
     req_type = request.META["TYPE"]
     if ((req_type != "LOG_IN") and (req_type != "REGIST")): #если это не запрос регистрации/входа в ситему - время проверки токена!
         connect_token = request.META["TOKEN"]
         exists = Token.objects.filter(user_token=connect_token).exists()
-        if exists:
+        if not exists:
             del(created_tokens) # освобождаем память
             JsonResponse({"STATUS": 401}) #если такого токена нет, кидаем Максу JSON с неавторизацией
         else:
@@ -47,5 +50,27 @@ def proc(request):
         JsonResponse({"NAME": first_name, "LAST_NAME": last_name, "SURNAME": surname, "TOKEN": conn_token})
 
 
+def user_data(request, user_id):
+    user = User.objects.get(id=user_id)
+    user_group_id = None if len(user.get_group_id()) == 0 else user.get_group_id()[0]["group_id"]
+    print(user_group_id)
+    data = {
+        "email": user.email,
+        "first_name": user.first_name.encode('unicode-escape').decode('unicode-escape'),
+        "last_name": user.last_name.encode('unicode-escape').decode('unicode-escape'),
+        "surname": user.surname.encode('unicode-escape').decode('unicode-escape'),
+        "role": user.role,
+        "group_id": user_group_id
+        }
+    return JsonResponse(data)
+
+def user_group_members(request, user_id):
+    members = User.objects.get(id=int(user_id)).get_all_group_members()
+    return JsonResponse({"users": [member.email for member in members]})
+
+
+# def schedule_day(request, date, user):
+
+    
 #TODO: Придумать другой способ искать конкретную строку по логину. Перебирать всю базу данных - беспощадно к памяти
 #TODO: Дописать регистрацию токена
