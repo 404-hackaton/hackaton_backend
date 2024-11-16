@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import User, Tokens
+from .models import User, Token
 import random
 
 def mktk(): #MaKe ToKen
@@ -22,7 +22,6 @@ def proc(request):
         connect_token = request.META["TOKEN"]
         exists = Token.objects.filter(user_token=connect_token).exists()
         if not exists:
-            del(created_tokens) # освобождаем память
             JsonResponse({"STATUS": 401}) #если такого токена нет, кидаем Максу JSON с неавторизацией
         else:
             corr = True
@@ -33,26 +32,36 @@ def proc(request):
         users_by_login = User.objects.filter(email=login)
         corr = False
         ind = 0
-        if users_by_login.exists() and users_by_login[0].password == passwords:
+        if users_by_login.exists() and users_by_login[0].password == connect_password:
             corr = True
-            ind =  users_by_login[0].id #зачем? ниже, при удачной регистрации
-    if not corr:
-        JsonResponse({"STATUS": 404}) # И какой код мне ему вернуть? 404, типо такой учетки нет, или 401 с пояснением? Пока оставлю 404
-    else:
-        first_name = (User.objects.values_list('first_name', flat = True).distinct())[ind]
-        last_name = (User.objects.values_list('Last_name', flat = True).distinct())[ind]
-        surname = (User.objects.values_list('surname', flat = True).distinct())[ind]
-        tokens = Tokens.objects.values_list('user_token', flat = True).distinct()
+        if not corr:
+            JsonResponse({"STATUS": 404}) # И какой код мне ему вернуть? 404, типо такой учетки нет, или 401 с пояснением? Пока оставлю 404
+        else:
+            user = User.objects.get(email_exact=connect_login)
+
+            user_data(request, user.get_id())
+
+    elif req_type == "REGIST":
+        connect_password = request.META["PASSWORD"]
+        connect_login = request.META["LOGIN"]
+        connect_fn = request.META["FIRST_NAME"]
+        connect_ln = request.META["LAST_NAME"]
+        connect_sn = request.META["SURNAME"]
+        new_user = User(email = connect_login, password = connect_password, first_name = connect_fn, last_name = connect_ln, surname = connect_sn, role = "STUDENT") #Условимся что роль по-умолчанию  - студент, более высокие роли пусть дают админы
+        new_user.save()
+        user = User.objects.get(emai_exact = connect_login)
+        tokens = Token.objects.values_list('user_token', flat=True)
         conn_token = mktk()
         while conn_token in tokens:
             conn_token = mktk()
-        #new_line = Tokens(user_tiken = conn_token, )
-        JsonResponse({"NAME": first_name, "LAST_NAME": last_name, "SURNAME": surname, "TOKEN": conn_token})
-
+        del tokens
+        new_token = Token(user_token=conn_token, user_id= user.get_id())
+        new_token.save()
 
 def user_data(request, user_id):
     user = User.objects.get(id=user_id)
     user_group_id = None if len(user.get_group_id()) == 0 else user.get_group_id()[0]["group_id"]
+    user_token = Token(user_id_exact = user_id)
     print(user_group_id)
     data = {
         "email": user.email,
@@ -60,7 +69,8 @@ def user_data(request, user_id):
         "last_name": user.last_name.encode('unicode-escape').decode('unicode-escape'),
         "surname": user.surname.encode('unicode-escape').decode('unicode-escape'),
         "role": user.role,
-        "group_id": user_group_id
+        "group_id": user_group_id,
+        "TOKEN":user_token.user_token.encode('unicode-escape').decode('unicode-escape')
         }
     return JsonResponse(data)
 
@@ -72,5 +82,3 @@ def user_group_members(request, user_id):
 # def schedule_day(request, date, user):
 
     
-#TODO: Придумать другой способ искать конкретную строку по логину. Перебирать всю базу данных - беспощадно к памяти
-#TODO: Дописать регистрацию токена

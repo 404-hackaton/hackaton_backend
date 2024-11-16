@@ -31,7 +31,7 @@ class User(models.Model):
         "PROFESSOR": "professor",
         "ADMINISTRATOR": "administrator",
     }, blank=True)
-    status = models.BooleanField(default=True)
+    status = models.BooleanField(default=True) # статус чего?
 
     # get all members of the groups this user belongs to.
     def get_all_group_members(self):
@@ -41,6 +41,9 @@ class User(models.Model):
     
     def get_group_id(self):
         return self.group_memberships.values('group_id')
+
+    def get_id(self):
+        return self.id
 
     def __str__(self):
         return self.email + " | " + str(self.id)
@@ -108,7 +111,6 @@ class Grade(models.Model):
 class Token(models.Model):
     user_token = models.CharField(max_lenght = 10, unique = True)
     user_id = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    token_created = models.DateTimeField()
 
 
 # TODO: clean this shit out of trash (blank)
