@@ -16,7 +16,6 @@ LOCATIONS = {
 }
 
 
-
 # models (pk is setting by default)
 class User(models.Model):
     # users shoudnt be deleted, instead set different status
@@ -31,6 +30,8 @@ class User(models.Model):
         "PROFESSOR": "professor",
         "ADMINISTRATOR": "administrator",
     })
+    first_enter = models.DateTimeField(blank=True, null=True) # delete blank
+    last_enter = models.DateTimeField(blank=True, null=True) # delete blank
     status = models.BooleanField(default=True)
 
     # get all members of the groups this user belongs to.
@@ -39,15 +40,19 @@ class User(models.Model):
             group_memberships__group_id__in=self.group_memberships.values('group_id')
         ).distinct()
 
+    # group id in which user present
     def get_group_id(self):
         return self.group_memberships.values('group_id')
 
+    # get schedule of user for day
     def get_schedule_day(self, date):
         schedules = Schedule.objects.filter(groups__members__student=self.id, date=date).distinct()
         return schedules
-        
-    def get_id(self):
-        return self.id
+
+    # get attendece of user for day
+    def get_attendence_day(self, date):
+        attendences = Attendence.objects.filter(student=self.id).distinct()
+        return attendences
 
     def __str__(self):
         return self.email + " | " + str(self.id) + " | " + self.role[0]
@@ -106,6 +111,19 @@ class Schedule(models.Model):
         unique_together = ["date", "time", "audience", "location"]
 
 
+class Attendence(models.Model):
+    student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    source = models.ForeignKey(Schedule, on_delete=models.DO_NOTHING)
+    status = models.CharField(max_length=1, choices={
+        "Н": "Н",
+        "У": "У",
+        "+": "+",
+    })
+
+    class Meta:
+        unique_together = ["student", "source"]
+
+
 class Grade(models.Model):
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     course = models.ForeignKey(Course, on_delete=models.DO_NOTHING)
@@ -118,10 +136,8 @@ class Grade(models.Model):
     })
     source = models.ForeignKey(Schedule, on_delete=models.DO_NOTHING)
 
+
 class Token(models.Model):
     token = models.CharField(max_length=10, unique=True)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     token_created = models.DateTimeField()
-
-
-# TODO: clean this shit out of trash (blank)

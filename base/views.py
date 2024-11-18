@@ -51,7 +51,7 @@ def proc(request):
         else:
             user = User.objects.get(email_exact=connect_login)
 
-            user_data(request, user.get_id())
+            user_data(request, user.id)
 
     elif req_type == "REGIST":
         connect_password = request.META["PASSWORD"]
@@ -67,7 +67,7 @@ def proc(request):
         while conn_token in tokens:
             conn_token = mktk()
         del tokens
-        new_token = Token(user_token=conn_token, user_id= user.get_id())
+        new_token = Token(user_token=conn_token, user_id= user.id)
         new_token.save()
 
 def user_data(request, user_id):
@@ -85,6 +85,7 @@ def user_data(request, user_id):
         "TOKEN":user_token.user_token.encode('unicode-escape').decode('unicode-escape')
         }
     return JsonResponse(data)
+
 
 def user_group_members(request, user_id):
     members = User.objects.get(id=int(user_id)).get_all_group_members()
@@ -110,6 +111,17 @@ def schedule_day(request, user_id, date):
         ))
     print(schedules_data)
     return JsonResponse(schedules_data)
+
+
+def attendence_day(request, user_id, date):
+    attendences = User.objects.filter(id=user_id)[0].get_attendence_day(date=date)
+    attendences_data = {"attendences": []}
+    for attendece in attendences:
+        attendences_data["attendences"].append((
+            {"source": attendece.source.id},
+            {"status": attendece.status},
+        ))
+    return JsonResponse(attendences_data)
 
 
 
