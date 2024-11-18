@@ -45,6 +45,9 @@ class User(models.Model):
     def get_schedule_day(self, date):
         schedules = Schedule.objects.filter(group__members__student=self.id, date=date).distinct()
         return schedules
+        
+    def get_id(self):
+        return self.id
 
     def __str__(self):
         return self.email + " | " + str(self.id) + " | " + self.role[0]
