@@ -43,7 +43,7 @@ class User(models.Model):
         return self.group_memberships.values('group_id')
 
     def get_schedule_day(self, date):
-        schedules = Schedule.objects.filter(group__members__student=self.id, date=date).distinct()
+        schedules = Schedule.objects.filter(groups__members__student=self.id, date=date).distinct()
         return schedules
         
     def get_id(self):
@@ -100,7 +100,7 @@ class Schedule(models.Model):
     time = models.CharField(max_length=1, choices=COURSE_TIME)
     location = models.CharField(max_length=10, choices=LOCATIONS)
     audience = models.CharField(max_length=10)
-    group = models.ForeignKey(Group, on_delete=models.DO_NOTHING, blank=True)
+    groups = models.ManyToManyField(Group)
 
     class Meta:
         unique_together = ["date", "time", "audience", "location"]

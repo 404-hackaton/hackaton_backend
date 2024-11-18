@@ -8,5 +8,6 @@ urlpatterns = [
     path('<str:user_id>/schedule/<str:date>', views.user_group_members, name='usergroup_members'),
     path('user/<str:user_id>', views.user_data, name='user_data'),
     path('schedule/<str:user_id>/<str:date>', views.schedule_day, name='schedule_day'),
-    path('fill', views.filling_database, name='fill'),
+    path('schedule/<str:user_id>/<str:date>', views.schedule_day, name='schedule_day'),
+    path('attendence/<str:user_id>/<str:date>', views.schedule_day, name='attendence_day'),
 ]

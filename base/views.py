@@ -4,6 +4,16 @@ from random import random
 import datetime
 import random
 
+
+COURSE_TIME = {
+    "1": "09:00",
+    "2": "10:40",
+    "3": "12:40",
+    "4": "14:20",
+    "5": "16:20",
+    "6": "18:00",
+}
+
 def mktk(): #MaKe ToKen
     alphabet = list("0123456789ABCDEFGHIJKOPQRSTUVWXVZabcdefgijkopqrstuvwxyz!_+-&?")
     Token = ""
@@ -81,71 +91,25 @@ def user_group_members(request, user_id):
     return JsonResponse({"users": [member.email for member in members]})
 
 
-def schedule_day(request, date, user_id):
+def schedule_day(request, user_id, date):
     schedules = User.objects.filter(id=user_id)[0].get_schedule_day(date=date)
-    schedules_data = {"schedules": ()}
+    schedules_data = {"schedules": []}
     for schedule in schedules:
-        schedules_data["schedules"] = (
+        schedules_data["schedules"].append((
             {"course_name": schedule.course.course_name},
             {"course_type": schedule.course.course_type},
-            {"professor": schedule.professor.first_name}
-        )
+            {"professor": f"{schedule.professor.first_name} {schedule.professor.last_name} {schedule.professor.surname}"},
+            {"audience": schedule.audience},
+            {"location": schedule.location},
+            {"date_year": str(schedule.date)[:4]},
+            {"date_month": str(schedule.date)[5:7]},
+            {"date_day": str(schedule.date)[8:]},
+            {"time_hour": COURSE_TIME[schedule.time][:2]},
+            {"time_minute": COURSE_TIME[schedule.time][3:]},
+            {"groups": [group.group_name for group in schedule.groups.all()]},
+        ))
+    print(schedules_data)
     return JsonResponse(schedules_data)
-
-def filling_database(request):
-    from russian_names import RussianNames
-    from transliterate import translit
-    from random import random
-
-
-    users_count = 20
-
-    # creating users
-    for _ in range(users_count):
-        first_name, surname, last_name = RussianNames().get_person().split()
-        email = translit(last_name, "ru", reversed=True) + "." + translit(first_name[0], "ru", reversed=True) + "." + translit(surname[0], "ru", reversed=True)
-        email = email.replace("'", "")
-        password = email.lower() + "123123"
-        email = email.lower() + "@education.com"
-        rand = random()
-        if rand < 0.82:
-            role = "STUDENT"
-        elif rand >= 0.82 and rand < 0.88:
-            role = "CAPTAIN"
-        elif rand >= 0.88 and rand < 0.95:
-            role = "PROFESSOR"
-        else:
-            role = "ADMINISTRATOR"
-        
-        user = User(email=email.lower(), password=password, first_name=first_name, last_name=last_name, surname=surname, role=role, status=True)
-        user.save()
-    
-    # adding courses
-    creating_courses = False
-    courses_data = (
-        ("Информатика", "Практика", "Кафедра информатики"),
-        ("Информатика", "Лекция", "Кафедра информатики"),
-        ("Основы российской госудврственности", "Практика", "Кафедра гуманитарных и социальных наук"),
-        ("Основы российской госудврственности", "Лекция", "Кафедра гуманитарных и социальных наук"),
-        ("История России", "Практика", "Кафедра гуманитарных и социальных наук"),
-        ("История России", "Лекция", "Кафедра гуманитарных и социальных наук"),
-        ("Введение в профессиональную деятельность", "Практика", "Кафедра индустриального программирования"),
-        ("Введение в профессиональную деятельность", "Лекция", "Кафедра индустриального программирования"),
-        ("Математический анализ", "Практика", "Кафедра высшей математики-3"),
-        ("Математический анализ", "Лекция", "Кафедра высшей математики-3"),
-        ("Технологии индустриального программирования", "Практика", "Кафедра индустриального программирования"),
-        ("Технологии индустриального программирования", " Лекция", "Кафедра индустриального программирования"),
-        ("Иностранный язык", "Практика", "Кафедра иностранных языков"),
-    )
-    if creating_courses:
-        for course_name, course_type, institute in courses_data:
-            course = Course(course_name=course_name, course_type=course_type, institute=institute)
-            course.save()
-
-    
-    
-
-    return JsonResponse({"status": 200})
 
 
 
