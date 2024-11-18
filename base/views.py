@@ -86,7 +86,9 @@ def schedule_day(request, date, user_id):
     schedules_data = {"schedules": ()}
     for schedule in schedules:
         schedules_data["schedules"] = (
-            {"course_name": schedule.course.course_name}
+            {"course_name": schedule.course.course_name},
+            {"course_type": schedule.course.course_type},
+            {"professor": schedule.professor.first_name}
         )
     return JsonResponse(schedules_data)
 
