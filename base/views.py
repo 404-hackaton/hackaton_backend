@@ -29,9 +29,9 @@ def home(request):
     return JsonResponse(users_dict)
 
 def proc(request):
-    req_type = request.META["TYPE"]
+    req_type = request.POST["TYPE"]
     if ((req_type != "LOG_IN") and (req_type != "REGIST")): #если это не запрос регистрации/входа в ситему - время проверки токена!
-        connect_token = request.META["TOKEN"]
+        connect_token = request.POST["TOKEN"]
         exists = Token.objects.filter(user_token=connect_token).exists()
         if not exists:
             JsonResponse({"STATUS": 401}) #если такого токена нет, кидаем Максу JSON с неавторизацией
@@ -39,8 +39,8 @@ def proc(request):
             corr = True
 
     elif (req_type == "LOG_IN"):
-        connect_password = request.META["PASSWORD"]
-        connect_login = request.META["LOGIN"]
+        connect_password = request.POST["PASSWORD"]
+        connect_login = request.POST["LOGIN"]
         users_by_login = User.objects.filter(email=login)
         corr = False
         ind = 0
@@ -54,11 +54,11 @@ def proc(request):
             user_data(request, user.id)
 
     elif req_type == "REGIST":
-        connect_password = request.META["PASSWORD"]
-        connect_login = request.META["LOGIN"]
-        connect_fn = request.META["FIRST_NAME"]
-        connect_ln = request.META["LAST_NAME"]
-        connect_sn = request.META["SURNAME"]
+        connect_password = request.POST["PASSWORD"]
+        connect_login = request.POST["LOGIN"]
+        connect_fn = request.POST["FIRST_NAME"]
+        connect_ln = request.POST["LAST_NAME"]
+        connect_sn = request.POST["SURNAME"]
         new_user = User(email = connect_login, password = connect_password, first_name = connect_fn, last_name = connect_ln, surname = connect_sn, role = "STUDENT") #Условимся что роль по-умолчанию  - студент, более высокие роли пусть дают админы
         new_user.save()
         user = User.objects.get(emai_exact = connect_login)
