@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from models import *
 from .models import *
 from random import random
 import datetime
@@ -28,47 +29,52 @@ def home(request):
         users_dict[user.email] = user.password
     return JsonResponse(users_dict)
 
-def proc(request):
+def verify_tk(request):
     req_type = request.POST["TYPE"]
     if ((req_type != "LOG_IN") and (req_type != "REGIST")): #если это не запрос регистрации/входа в ситему - время проверки токена!
         connect_token = request.POST["TOKEN"]
         exists = Token.objects.filter(user_token=connect_token).exists()
         if not exists:
             JsonResponse({"STATUS": 401}) #если такого токена нет, кидаем Максу JSON с неавторизацией
+            return False
         else:
-            corr = True
+            return True #такой токен есть, работаем дальше
 
-    elif (req_type == "LOG_IN"):
-        connect_password = request.POST["PASSWORD"]
-        connect_login = request.POST["LOGIN"]
-        users_by_login = User.objects.filter(email=login)
-        corr = False
-        ind = 0
-        if users_by_login.exists() and users_by_login[0].password == connect_password:
-            corr = True
-        if not corr:
-            JsonResponse({"STATUS": 404}) # И какой код мне ему вернуть? 404, типо такой учетки нет, или 401 с пояснением? Пока оставлю 404
-        else:
-            user = User.objects.get(email_exact=connect_login)
+def log_in(request):
+    connect_password = request.POST["PASSWORD"]
+    connect_login = request.POST["LOGIN"] # получаем основные данные
+    users_by_login = User.objects.filter(email=login)
+    corr = False
+    if users_by_login.exists() and users_by_login[0].password == connect_password: # проверяем логин + пароль
+        corr = True
+    if not corr:
+        JsonResponse({"STATUS": 404}) # И какой код мне ему вернуть? 404, типо такой учетки нет, или 401 с пояснением? Пока оставлю 404
+        return False #возвращаем что регистрация пошла не по плану и продолжать выполнение запроса нет смысла
+    else:
+        user = User.objects.get(email_exact=connect_login)
+        user_data(request, user.id) # отправляем Максу данные в JSON
+        return True # ура, юзер реален, продолжаем работу в штатном режиме
 
-            user_data(request, user.id)
 
-    elif req_type == "REGIST":
-        connect_password = request.POST["PASSWORD"]
-        connect_login = request.POST["LOGIN"]
-        connect_fn = request.POST["FIRST_NAME"]
-        connect_ln = request.POST["LAST_NAME"]
-        connect_sn = request.POST["SURNAME"]
-        new_user = User(email = connect_login, password = connect_password, first_name = connect_fn, last_name = connect_ln, surname = connect_sn, role = "STUDENT") #Условимся что роль по-умолчанию  - студент, более высокие роли пусть дают админы
-        new_user.save()
-        user = User.objects.get(emai_exact = connect_login)
-        tokens = Token.objects.values_list('user_token', flat=True)
+
+def regist(request):
+    connect_password = request.POST["PASSWORD"]
+    connect_login = request.POST["LOGIN"]
+    connect_fn = request.POST["FIRST_NAME"]
+    connect_ln = request.POST["LAST_NAME"]
+    connect_sn = request.POST["SURNAME"]
+    new_user = User(email = connect_login, password = connect_password, first_name = connect_fn, last_name = connect_ln, surname = connect_sn, role = "STUDENT") #Условимся что роль по-умолчанию  - студент, более высокие роли пусть дают админы
+    new_user.save()
+    user = User.objects.get(emai_exact = connect_login)
+    tokens = Token.objects.values_list('user_token', flat=True)
+    conn_token = mktk()
+    while conn_token in tokens:
         conn_token = mktk()
-        while conn_token in tokens:
-            conn_token = mktk()
-        del tokens
-        new_token = Token(user_token=conn_token, user_id= user.id)
-        new_token.save()
+    del tokens
+    new_token = Token(user_token=conn_token, user_id= user.id)
+    new_token.save()
+    JsonResponse({"STATUS": 200})
+    return True #регистрация успешна, ура
 
 def user_data(request, user_id):
     user = User.objects.get(id=user_id)
@@ -122,7 +128,13 @@ def attendence_day(request, user_id, date):
             {"status": attendece.status},
         ))
     return JsonResponse(attendences_data)
+'''
+def mk_grade(request): # функция чтобы ставить отметки
+    if verify_tk(request): #проверяем токен
+        user_token = request.POST["TOKEN"]
+        prof = Token.objects.filter(token_exact = user_token)[0] # получили юзера
+        if prof.role != "professor" or user.role != "administrator":
+            JsonResponse({"STATUS": 403}) # возвращаем Максу запрет проведения операции
 
-
-
-
+        else:
+'''
