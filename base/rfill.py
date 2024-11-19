@@ -85,8 +85,15 @@ def rfill(times):
         subj = choice(Schedule.objects.all())
         new_grade = Grade(student = choice(students), course = choice(courses), grade = grade, grade_type = gr_type, source = subj)
         new_grade.save()
-        del students
         del courses
+
+    subjects = Schedule.objects.all()
+    if students.exists() and subjects.exists():
+        new_attendance = Attendence(student = choice(students), source = choice(subjects), status = choice(['Н', 'У', '+']))
+        new_attendance.save()
+    del subjects
+    del students
+
 
 
 
