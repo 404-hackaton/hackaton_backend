@@ -30,8 +30,8 @@ class User(models.Model):
         "PROFESSOR": "professor",
         "ADMINISTRATOR": "administrator",
     })
-    first_enter = models.DateTimeField(blank=True, null=True) # delete blank
-    last_enter = models.DateTimeField(blank=True, null=True) # delete blank
+    first_enter = models.DateTimeField(blank=True, null=True) # delete blank and null
+    last_enter = models.DateTimeField(blank=True, null=True) # delete blank and null
     status = models.BooleanField(default=True)
 
     # get all members of the groups this user belongs to.
@@ -78,7 +78,8 @@ class Course(models.Model):
     course_name = models.CharField(max_length=100)
     course_type = models.CharField(max_length=20, blank=True)
     institute = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
+    hours = models.IntegerField(null=True) # delete null
+    description = models.TextField(blank=True)                      
 
     class Meta:
         unique_together = ["course_name", "course_type", "institute"]
@@ -87,15 +88,28 @@ class Course(models.Model):
         return self.course_name + " | " + self.course_type
 
 
-# class Subject(model.Model):
-#     subject_name = models.CharField()
+# direction of study
+class Direction(models.Model):
+    direction_code = models.CharField(max_length=10)
+    direction_name = models.CharField(max_length=100)
+    courses = models.ManyToManyField(Course)
+
+    class Meta:
+        unique_together = ["direction_code", "direction_name"]
+
+    def __str__(self):
+        return self.direction_code
+
 
 class Enrollment(models.Model):
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    course = models.ForeignKey(Course, on_delete=models.DO_NOTHING)
+    direction = models.ForeignKey(Direction, on_delete=models.DO_NOTHING, null=True) # delete null
 
     class Meta:
-        unique_together = ["student", "course"]
+        unique_together = ["student", "direction"]
+
+    def __str__(self):
+        return self.student + " | " + self.direction
 
 
 class Schedule(models.Model):

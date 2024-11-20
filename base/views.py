@@ -113,6 +113,15 @@ def schedule_day(request, user_id, date):
     return JsonResponse(schedules_data)
 
 
+def attendence_status_day(request, user_id, date):
+    statuses = attendences = User.objects.filter(id=user_id)[0].get_attendence_day(date=date)
+    status_set = set()
+    for status in statuses:
+        status_set.add(status.status)
+    status_set = "/".join(sorted(list(status_set)))
+    return JsonResponse({"status_day": status_set})
+
+
 def attendence_day(request, user_id, date):
     attendences = User.objects.filter(id=user_id)[0].get_attendence_day(date=date)
     attendences_data = {"attendences": []}
@@ -123,6 +132,52 @@ def attendence_day(request, user_id, date):
         ))
     return JsonResponse(attendences_data)
 
+
+# delete later
+def fill(request):
+    creating_courses = True
+
+    courses_data = (
+        ("Информатика", "Практика", "Кафедра информатики", 64),
+        ("Информатика", "Лекция", "Кафедра информатики", 16),
+        ("Основы российской государственности", "Практика", "Кафедра гуманитарных и социальных наук", 32),
+        ("Основы российской государственности", "Лекция", "Кафедра гуманитарных и социальных наук", 16),
+        ("История России", "Практика", "Кафедра гуманитарных и социальных наук", 32),
+        ("История России", "Лекция", "Кафедра гуманитарных и социальных наук", 32),
+        ("Введение в профессиональную деятельность", "Лекция", "Кафедра индустриального программирования", 16),
+        ("Математический анализ", "Практика", "Кафедра высшей математики-3", 32),
+        ("Математический анализ", "Лекция", "Кафедра высшей математики-3", 32),
+        ("Технологии индустриального программирования", "Практика", "Кафедра индустриального программирования", 32),
+        ("Технологии индустриального программирования", " Лекция", "Кафедра индустриального программирования", 16),
+        ("Иностранный язык", "Практика", "Кафедра иностранных языков", 32),
+        ("Правоведение", "Лекция", "Кафедра государственно-правовых дисциплин", 16),
+        ("Правоведение", "Практика", "Кафедра государственно-правовых дисциплин", 16),
+        ("Физика", "Лекция", "Кафедра физики и технической механики", 32),
+        ("Физика", "Практика", "Кафедра физики и технической механики", 32),
+        ("Физика", "Лабароторная", "Кафедра физики и технической механики", 16),
+        ("Линейная алгебра и аналитическая геометрия", "Практика", "Кафедра высшей математики-3", 32),
+        ("Линейная алгебра и аналитическая геометрия", "Лекция", "Кафедра высшей математики-3", 32),
+        ("Алгоритмы и структуры данных", "Практика", "Кафедра индустриального программирования", 32),
+        ("Алгоритмы и структуры данных", "Лекция", "Кафедра индустриального программирования", 16),
+        ("Физическая культура и спорт (семестр 1)", "Практика", "Кафедра Физического воспитания", 32),
+    )
+    if creating_courses:
+        for course_name, course_type, institute, hours in courses_data:
+            if not Course.objects.filter(course_name=course_name, course_type=course_type).exists():
+                course = Course(course_name=course_name, course_type=course_type, institute=institute)
+                course.save()
+            course = Course.objects.get(course_name=course_name, course_type=course_type)
+            course.hours = hours
+            course.save()
+    
+
+    # dont work
+    creating_directions = False
+    if creating_directions:
+        direction = Direction.objects.create(direction_code="09.03.02", direction_name="Фуллстек разработка")
+        direction.courses.add(course.id for course in Course.objects.all())
+
+    return JsonResponse({1:1})
 
 
 #TODO: Придумать другой способ искать конкретную строку по логину. Перебирать всю базу данных - беспощадно к памяти
