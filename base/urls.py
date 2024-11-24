@@ -10,5 +10,6 @@ urlpatterns = [
     path('schedule/<str:user_id>/<str:date>', views.schedule_day, name='schedule_day'),
     path('attendence/<str:user_id>/<str:date>', views.attendence_day, name='attendence_day'),
     path('attendence-status/<str:user_id>/<str:date>', views.attendence_status_day, name='attendence_status_day'),
+    path('gpa/<str:user_id>/', views.gpa_calculate, name='gpa_calculate'),
     path('fill', views.fill, name='fill'),
 ]

@@ -54,6 +54,11 @@ class User(models.Model):
         attendences = Attendence.objects.filter(student=self.id).distinct()
         return attendences
 
+    def get_courses(self):
+        direction = Enrollment.objects.get(student=self.id).direction
+        courses = direction.courses.all()
+        return courses
+        
     def __str__(self):
         return self.email + " | " + str(self.id) + " | " + self.role[0]
 
@@ -109,7 +114,7 @@ class Enrollment(models.Model):
         unique_together = ["student", "direction"]
 
     def __str__(self):
-        return self.student + " | " + self.direction
+        return str(self.student) + " | " + str(self.direction)
 
 
 class Schedule(models.Model):

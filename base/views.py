@@ -133,6 +133,18 @@ def attendence_day(request, user_id, date):
     return JsonResponse(attendences_data)
 
 
+def gpa_calculate(request, user_id):
+    gpa = 0
+    student = User.objects.get(id=int(user_id))
+    courses = student.get_courses()
+    hours_sum = sum(courses.values_list("hours", flat=True))
+    for course in courses:
+        grades = sum(Grade.objects.filter(student=user_id, course=course).values_list("grade", flat=True))
+        gpa += grades * (course.hours / hours_sum)
+
+    return JsonResponse({"gpa": round(gpa, 2)})
+
+
 # delete later
 def fill(request):
     creating_courses = True
