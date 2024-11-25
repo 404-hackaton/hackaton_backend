@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from models import *
 from .models import *
 from random import random
 import datetime
