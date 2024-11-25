@@ -13,6 +13,18 @@ Made by: 404
 
     ```cd hackaton_backend```
 
+3. Creating virtual enviroment (optional)
+
+    ```python3 -m venv env```
+
+4. Activating virtual enviromnet (optional)
+
+    bash/zsh: ```source env/bin/activate```
+
+    cmd.exe: ```env/Scripts/activate.bat```
+
+    PowerShell: ```env/Scripts/Activate.ps1```
+
 3. Installing requirements
 
     ```pip3 install -r requirements.txt```
