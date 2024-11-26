@@ -158,4 +158,5 @@ class Grade(models.Model):
 
 class Token(models.Model):
     token = models.CharField(max_length=10, unique=True)
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True)
+    token_created = models.DateTimeField(null=True)
